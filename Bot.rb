@@ -9,6 +9,7 @@ class Bot
 		@key = '5217763625:AAF79QpWHdGlfueS4dQ0nsOzVFdZHZwrS6E'.freeze
 		@current_path = File.dirname(__FILE__)+"/Data"
 		@photo_path = @current_path+"/Persons_photos/"
+		@statement = 2
 	end
 
 	def send_photo(message)
@@ -36,5 +37,42 @@ class Bot
 		@mistakes = 2
 		@points = 0
 		@statement = 2
+	end
+
+	def start(message)
+		destroy
+		say(message, "Hello, #{message.from.first_name}")
+		send_photo(message)
+		Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: [%w(Actor Dev)], one_time_keyboard: true)
+	end
+
+	def when_actor(message)
+		if @statement == 1
+			@points += 1
+			say(message, "Correct! Your score: #{@points}, miss left: #{@mistakes}")
+			say(message)
+		else
+			@mistakes -= 1
+			say(message, "Miss! It's a Dev! Your score: #{@points}, miss left: #{@mistakes}")
+			if @mistakes == 0
+				say(message, "You lose! Your score: #{@points}")
+				destroy
+			end
+		end
+	end
+
+	def when_dev(message)
+		if @statement == 0
+			@points += 1
+			say(message, "Correct! Your score: #{@points}, miss left: #{@mistakes}")
+			say(message)
+		else
+			@mistakes -= 1
+			say(message, "Miss! It's an Actor! Your score: #{@points}, miss left: #{@mistakes}")
+			if @mistakes == 0
+				say(message, "You lose! Your score: #{@points}")
+				destroy
+			end
+		end
 	end
 end
