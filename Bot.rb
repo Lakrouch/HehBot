@@ -35,5 +35,6 @@ class Bot
 	def destroy
 		@mistakes = 2
 		@points = 0
+		@statement = 2
 	end
 end
