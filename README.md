@@ -1,3 +1,3 @@
 # HehBot
-/start for play the game
+/start to play the game
 /stop to stop it
