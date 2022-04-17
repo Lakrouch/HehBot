@@ -1,6 +1,7 @@
 # HehBot
 <h3>HehBot is a Telegram bot. His only function - show you a photo</h3>
 <h3>of actors or devs, and you and you have to guess who it is</h3>
+
 ----
 # Start a bot on your machine
 ruby bot_start.rb
