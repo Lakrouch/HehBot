@@ -2,7 +2,7 @@
 
 require 'telegram/bot'
 
-# Class with logic realisation
+# class with logic implementation
 class Bot
   attr_accessor :mistakes, :points, :key, :bot, :statement
 
@@ -49,33 +49,51 @@ class Bot
     Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: [%w[Actor Dev]], one_time_keyboard: true)
   end
 
+  def when_true(message)
+    @points += 1
+    say(message, "Correct! Your score: #{@points}, miss left: #{@mistakes}")
+    say(message)
+  end
+
+  def when_false(who_is, message)
+    @mistakes -= 1
+    say(message, "Miss! It's a #{who_is}! Your score: #{@points}, miss left: #{@mistakes}")
+    if @mistakes.zero?
+      say(message, "You lose! Your score: #{@points}")
+      destroy
+    end
+  end
+
   def when_actor(message)
     if @statement == 1
-      @points += 1
-      say(message, "Correct! Your score: #{@points}, miss left: #{@mistakes}")
-      say(message)
+      when_true(message)
     else
-      @mistakes -= 1
-      say(message, "Miss! It's a Dev! Your score: #{@points}, miss left: #{@mistakes}")
-      if @mistakes.zero?
-        say(message, "You lose! Your score: #{@points}")
-        destroy
-      end
+      when_false('dev', message)
     end
+    send_photo(message)
   end
 
   def when_dev(message)
     if @statement.zero?
-      @points += 1
-      say(message, "Correct! Your score: #{@points}, miss left: #{@mistakes}")
-      say(message)
+      when_true(message)
     else
-      @mistakes -= 1
-      say(message, "Miss! It's an Actor! Your score: #{@points}, miss left: #{@mistakes}")
-      if @mistakes.zero?
-        say(message, "You lose! Your score: #{@points}")
-        destroy
-      end
+      when_false('actor', message)
+    end
+    send_photo(message)
+  end
+
+  def reaction_on_message(message)
+    case message.text
+    when '/start'
+      start(message)
+    when 'Actor'
+      when_actor(message)
+    when 'Dev'
+      when_dev(message)
+    when '/stop'
+      say(message, 'Bye!')
+    else
+      say(message, "I don't understand you")
     end
   end
 end

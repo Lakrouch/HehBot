@@ -8,35 +8,8 @@ loop do
     bot_play.bot = bot
 
     bot.listen do |message|
-      case message.text
-      when '/start'
-        bot_play.start(message)
-      when 'Actor'
-        if bot_play.statement == 2
-          bot_play.start(message)
-          next
-        end
-        bot_play.when_actor(message)
-        break if bot_play.statement == 2
-
-        bot_play.send_photo(message)
-      when 'Dev'
-        if bot_play.statement == 2
-          bot_play.start(message)
-          next
-        end
-        bot_play.when_dev(message)
-        break if bot_play.statement == 2
-
-        bot_play.send_photo(message)
-      when '/stop'
-        next if bot_play.statement == 2
-
-        bot_play.say(message, 'Bye!')
-        bot_play.statement = 2
-        break
-      end
-    rescue StandardError => e
+      bot_play.reaction_on_message(message)
+    rescue NoMethodError
       next
     end
   end
