@@ -10,6 +10,7 @@ GEM
       descendants_tracker (~> 0.0.1)
     descendants_tracker (0.0.4)
       thread_safe (~> 0.3, >= 0.3.1)
+    dotenv (2.7.6)
     dry-inflector (0.2.1)
     faraday (1.0.1)
       multipart-post (>= 1.2, < 3)
@@ -52,6 +53,7 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
+  dotenv (~> 2.7)
   dry-inflector (~> 0.2.1)
   faraday (~> 1.0.0)
   faraday-net_http (~> 2.0.1)

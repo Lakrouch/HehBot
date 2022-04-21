@@ -1,15 +1,17 @@
 # frozen_string_literal: true
 
 require 'telegram/bot'
+require 'dotenv'
 
 # class with logic implementation
 class Bot
   attr_accessor :mistakes, :points, :key, :bot, :statement
 
   def initialize
+    Dotenv.load
     @mistakes = 2
     @points = 0
-    @key = '5217763625:AAF79QpWHdGlfueS4dQ0nsOzVFdZHZwrS6E'
+    @key = ENV["API_KEY"]
     @current_path = "#{File.dirname(__FILE__)}/Data"
     @photo_path = "#{@current_path}/Persons_photos/"
     @statement = 2
