@@ -11,16 +11,23 @@ class Bot
     Dotenv.load
     @mistakes = 2
     @points = 0
-    @key = ENV["API_KEY"]
+    @key = ENV['API_KEY']
     @current_path = "#{File.dirname(__FILE__)}/Data"
     @photo_path = "#{@current_path}/Persons_photos/"
     @statement = 2
+    @chat_id = 0
   end
 
-  def send_photo(message)
+  def send_photo
     photo = take_photo
-    bot.api.send_photo(chat_id: message.chat.id,
+    bot.api.send_photo(chat_id: @chat_id,
                        photo: Faraday::UploadIO.new(@photo_path + photo, 'image/jpeg'))
+    kb = [
+      Telegram::Bot::Types::InlineKeyboardButton.new(text: 'Actor', callback_data: 'Actor'),
+      Telegram::Bot::Types::InlineKeyboardButton.new(text: 'Dev', callback_data: 'Dev')
+    ]
+    markup = Telegram::Bot::Types::InlineKeyboardMarkup.new(inline_keyboard: kb)
+    bot.api.send_message(chat_id: @chat_id, text: 'Who is this?', reply_markup: markup)
   end
 
   def take_photo
@@ -34,8 +41,8 @@ class Bot
     @person[2]
   end
 
-  def say(message, text = @person[1])
-    @bot.api.send_message(chat_id: message.chat.id, text: text)
+  def say(text = @person[1])
+    @bot.api.send_message(chat_id: @chat_id, text: text)
   end
 
   def destroy
@@ -46,56 +53,61 @@ class Bot
 
   def start(message)
     destroy
-    say(message, "Hello, #{message.from.first_name}")
-    send_photo(message)
-    Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: [%w[Actor Dev]], one_time_keyboard: true)
+    @chat_id = message.chat.id
+    say("Hello, #{message.from.first_name}")
+    send_photo
   end
 
-  def when_true(message)
+  def when_true
     @points += 1
-    say(message, "Correct! Your score: #{@points}, miss left: #{@mistakes}")
-    say(message)
+    say("Correct! Your score: #{@points}, miss left: #{@mistakes}")
+    say
   end
 
-  def when_false(who_is, message)
+  def when_false(who_is)
     @mistakes -= 1
-    say(message, "Miss! It's a #{who_is}! Your score: #{@points}, miss left: #{@mistakes}")
+    say("Miss! It's a #{who_is}! Your score: #{@points}, miss left: #{@mistakes}")
     if @mistakes.zero?
-      say(message, "You lose! Your score: #{@points}")
+      say("You lose! Your score: #{@points}")
       destroy
     end
   end
 
-  def when_actor(message)
+  def when_actor
     if @statement == 1
-      when_true(message)
+      when_true
     else
-      when_false('dev', message)
+      when_false('dev')
     end
-    send_photo(message)
+    send_photo
   end
 
-  def when_dev(message)
+  def when_dev
     if @statement.zero?
-      when_true(message)
+      when_true
     else
-      when_false('actor', message)
+      when_false('actor')
     end
-    send_photo(message)
+    send_photo
   end
 
   def reaction_on_message(message)
     case message.text
     when '/start'
       start(message)
-    when 'Actor'
-      when_actor(message)
-    when 'Dev'
-      when_dev(message)
     when '/stop'
-      say(message, 'Bye!')
+      say('Bye!')
     else
-      say(message, "I don't understand you")
+      say("I don't understand you")
+    end
+  end
+
+  def reaction_on_query(message)
+    case message.data.to_s
+    when 'Actor'
+      when_actor
+    when 'Dev'
+      when_dev
     end
   end
 end
