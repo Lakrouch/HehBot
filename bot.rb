@@ -37,7 +37,7 @@ class Bot
       persons << line
     end
     @person = persons[rand(0...persons.length)].split(',')
-    @statement = @person[0] == 'Актёр' ? 1 : 0
+    @statement = @person[0] == 'Actor' ? 1 : 0
     @person[2]
   end
 
