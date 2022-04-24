@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
+
 require 'telegram/bot'
 require 'dotenv'
+require './bot_db_service'
 
 # class with logic implementation
 class Bot
@@ -16,12 +18,13 @@ class Bot
     @photo_path = "#{@current_path}/Persons_photos/"
     @statement = 2
     @chat_id = 0
+    @bot_db_service = Bot_db_service.new(File.new("#{@current_path}/persons.yml"))
   end
 
   def send_photo
     photo = take_photo
     bot.api.send_photo(chat_id: @chat_id,
-                       photo: Faraday::UploadIO.new(@photo_path + photo, 'image/jpeg'))
+                       photo: Faraday::UploadIO.new((@photo_path + photo).strip, 'image/jpeg'))
     kb = [
       Telegram::Bot::Types::InlineKeyboardButton.new(text: 'Actor', callback_data: 'Actor'),
       Telegram::Bot::Types::InlineKeyboardButton.new(text: 'Dev', callback_data: 'Dev')
@@ -31,18 +34,20 @@ class Bot
   end
 
   def take_photo
-    persons = []
-    file = File.new("#{@current_path}/persons.yml")
-    file.each do |line|
-      persons << line
-    end
-    @person = persons[rand(0...persons.length)].split(',')
-    @statement = @person[0] == 'Актёр' ? 1 : 0
-    @person[2]
+    @person = @bot_db_service.get_random_person
+    @statement = @person[1] == 'Actor' ? 1 : 0
+    return @person[0]+"."+@person[3]
   end
 
-  def say(text = @person[1])
-    @bot.api.send_message(chat_id: @chat_id, text: text)
+  def uncode(str)
+    str.gsub! "slash", "/"
+    str.gsub! "dual", ":"
+    str.gsub! "point", "."
+    return str
+  end
+
+  def say(text = uncode(@person[2]), id = @chat_id)
+    @bot.api.send_message(chat_id: id, text: text)
   end
 
   def destroy
@@ -98,7 +103,7 @@ class Bot
     when '/stop'
       say('Bye!')
     else
-      say("I don't understand you")
+      say("I don't understand you", message.chat.id)
     end
   end
 
