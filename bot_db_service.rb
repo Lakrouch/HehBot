@@ -2,10 +2,11 @@ require 'pg'
 
 class Bot_db_service
 	def initialize(list)
-		db_create(list)
+		persons_table_create(list)
+		records_table_create
 	end
 
-	def db_create(list)
+	def persons_table_create(list)
 		begin
 			con = PG.connect :dbname => ENV['DB_NAME'], :user => ENV['USER']
 			con.exec "DROP TABLE IF EXISTS Persons"
@@ -19,6 +20,18 @@ class Bot_db_service
 				con.exec "INSERT INTO Persons
 									VALUES (#{line[0].to_i}, '#{line[1]}', '#{line[2]}', '#{line[3]}')"
 			}
+		rescue PG::Error => e
+			puts e.message
+		ensure
+			con.close if con
+		end
+	end
+
+	def records_table_create
+		begin
+			con = PG.connect :dbname => ENV['DB_NAME'], :user => ENV['USER']
+			con.exec "DROP TABLE IF EXISTS Records"
+			con.exec "CREATE TABLE Records (name VARCHAR(20), score INTEGER)"
 		rescue PG::Error => e
 			puts e.message
 		ensure

@@ -57,7 +57,7 @@ class Bot
   end
 
   def start(message)
-    destroy
+    @statement = 1
     @chat_id = message.chat.id
     say("Hello, #{message.from.first_name}")
     send_photo
@@ -84,7 +84,7 @@ class Bot
     else
       when_false('dev')
     end
-    send_photo
+    send_photo if @statement != 2
   end
 
   def when_dev
@@ -93,15 +93,25 @@ class Bot
     else
       when_false('actor')
     end
-    send_photo
+    if @statement != 2
+      send_photo
+    else
+      say('Type /start to play again')
+    end
+  end
+
+  def records
+
   end
 
   def reaction_on_message(message)
     case message.text
     when '/start'
       start(message)
+    when '/records'
+      records
     when '/stop'
-      say('Bye!')
+      say('Bye!', message.chat.id)
     else
       say("I don't understand you", message.chat.id)
     end
