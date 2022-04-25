@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-
 require 'telegram/bot'
 require 'dotenv'
 require './bot_db_service'
@@ -18,7 +17,8 @@ class Bot
     @photo_path = "#{@current_path}/Persons_photos/"
     @statement = 2
     @chat_id = 0
-    @bot_db_service = Bot_db_service.new(File.new("#{@current_path}/persons.yml"))
+    @bot_db_service = BotDbService.new(File.new("#{@current_path}/persons.yml"))
+    @user = ' '
   end
 
   def send_photo
@@ -34,16 +34,16 @@ class Bot
   end
 
   def take_photo
-    @person = @bot_db_service.get_random_person
+    @person = @bot_db_service.take_random_person
     @statement = @person[1] == 'Actor' ? 1 : 0
-    return @person[0]+"."+@person[3]
+    "#{@person[0]}.#{@person[3]}"
   end
 
   def uncode(str)
-    str.gsub! "slash", "/"
-    str.gsub! "dual", ":"
-    str.gsub! "point", "."
-    return str
+    str.gsub! 'slash', '/'
+    str.gsub! 'dual', ':'
+    str.gsub! 'point', '.'
+    str
   end
 
   def say(text = uncode(@person[2]), id = @chat_id)
@@ -59,6 +59,7 @@ class Bot
   def start(message)
     @statement = 1
     @chat_id = message.chat.id
+    @user = message.from.first_name
     say("Hello, #{message.from.first_name}")
     send_photo
   end
@@ -84,7 +85,11 @@ class Bot
     else
       when_false('dev')
     end
-    send_photo if @statement != 2
+    if @statement != 2
+      send_photo
+    else
+      records_insert
+    end
   end
 
   def when_dev
@@ -96,12 +101,17 @@ class Bot
     if @statement != 2
       send_photo
     else
-      say('Type /start to play again')
+      records_insert
     end
   end
 
   def records
+    @bot_db_service.tables_select
+  end
 
+  def records_insert
+    say('Type /start to play again')
+    @bot_db_service.tables_insert(@chat_id, @user, @points)
   end
 
   def reaction_on_message(message)

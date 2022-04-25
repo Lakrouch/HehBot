@@ -9,7 +9,7 @@ loop do
     bot.listen do |message|
       case message
       when Telegram::Bot::Types::CallbackQuery
-          bot_play.reaction_on_query(message)
+        bot_play.reaction_on_query(message)
       when Telegram::Bot::Types::Message
         bot_play.reaction_on_message(message)
       end
