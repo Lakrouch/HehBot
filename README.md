@@ -11,3 +11,9 @@ ruby bot_start.rb
 <h3>/start = start the game</h3>
 <h3>/stop = stop the game</h3>
 <h3>Actor/Dev = if you see photo of actor/dev</h3>
+
+----
+# .env variables
+<h3>API-KEY - token of your telegram-bot</h3>
+<h3>DB_NAME - name of your database</h3>
+<h3>USER - your username  for database with DB_NAME</h3>
