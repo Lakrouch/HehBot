@@ -25,11 +25,11 @@ class Bot
     photo = take_photo
     bot.api.send_photo(chat_id: @chat_id,
                        photo: Faraday::UploadIO.new((@photo_path + photo).strip, 'image/jpeg'))
-    kb = [
+    key_board = [
       Telegram::Bot::Types::InlineKeyboardButton.new(text: 'Actor', callback_data: 'Actor'),
       Telegram::Bot::Types::InlineKeyboardButton.new(text: 'Dev', callback_data: 'Dev')
     ]
-    markup = Telegram::Bot::Types::InlineKeyboardMarkup.new(inline_keyboard: kb)
+    markup = Telegram::Bot::Types::InlineKeyboardMarkup.new(inline_keyboard: key_board)
     bot.api.send_message(chat_id: @chat_id, text: 'Who is this?', reply_markup: markup)
   end
 
@@ -39,20 +39,19 @@ class Bot
     "#{@person[0]}.#{@person[3]}"
   end
 
-  def uncode(str)
+  def decode(str)
     str.gsub! 'slash', '/'
     str.gsub! 'dual', ':'
     str.gsub! 'point', '.'
     str
   end
 
-  def say(text = uncode(@person[2]), id = @chat_id)
+  def say(text = decode(@person[2]), id = @chat_id)
     @bot.api.send_message(chat_id: id, text: text)
   end
 
   def destroy
     @mistakes = 2
-    @points = 0
     @statement = 2
   end
 
@@ -72,41 +71,33 @@ class Bot
 
   def when_false(who_is)
     @mistakes -= 1
-    say("Miss! It's a #{who_is}! Your score: #{@points}, miss left: #{@mistakes}")
     if @mistakes.zero?
       say("You lose! Your score: #{@points}")
       destroy
+    else
+      say("Miss! It's a #{who_is}! Your score: #{@points}, miss left: #{@mistakes}")
     end
+  end
+
+  def when_lose
+    records_insert
+    @points = 0
   end
 
   def when_actor
-    if @statement == 1
-      when_true
-    else
-      when_false('dev')
-    end
-    if @statement != 2
-      send_photo
-    else
-      records_insert
-    end
+    @statement == 1 ? when_true : when_false('dev')
+    @statement != 2 ? send_photo : when_lose
   end
 
   def when_dev
-    if @statement.zero?
-      when_true
-    else
-      when_false('actor')
-    end
-    if @statement != 2
-      send_photo
-    else
-      records_insert
-    end
+    @statement.zero? ? when_true : when_false('actor')
+    @statement != 2 ? send_photo : when_lose
   end
 
   def records
-    @bot_db_service.tables_select
+    say 'Our top-five:'
+    records_select = @bot_db_service.tables_select
+    records_select.each { |row| say "#{row.values_at('name').to_s[2..-3]}: #{row.values_at('score').to_s[2..-3]} " }
   end
 
   def records_insert
@@ -128,11 +119,6 @@ class Bot
   end
 
   def reaction_on_query(message)
-    case message.data.to_s
-    when 'Actor'
-      when_actor
-    when 'Dev'
-      when_dev
-    end
+    message.data.to_s == 'Actor' ? when_actor : when_dev
   end
 end
